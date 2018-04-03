@@ -29,10 +29,12 @@ def dynamic_rnn(rnn_model, seq_input, seq_lens, initial_state=None):
         state = initial_state.unsqueeze(0)
         # TODO: is this right??? (not used atm)
         state = state.repeat(rnn_model.num_layers, 1, 1)
+        rnn_model.flatten_parameters()
         hx = (state, state)
     else:
         hx = None
     outputs, _ = rnn_model(seq_input, hx)
+    rnn_model.flatten_parameters()
     rnn_hidden_size = outputs.size(2)
 
     # Select the (T-1)th elements in dim 1 of outputs using (seq_lens-1)

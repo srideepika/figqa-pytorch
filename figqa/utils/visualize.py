@@ -23,11 +23,8 @@ class VisdomVisualize():
                     server = config['server']
                 if 'port' in config:
                     port = int(config['port'])
-        self.viz = visdom.Visdom(
-            port=port,
-            env=env_name,
-            server=server,
-        )
+        print('starting')
+        self.viz = visdom.Visdom()
         self.wins = {}
 
     @property

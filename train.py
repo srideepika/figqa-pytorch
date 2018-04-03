@@ -34,28 +34,30 @@ def log_stuff(iter_idx, loss, batch, pred, val_dataloader, model,
         running_loss = loss.data[0]
     else:
         running_loss = alpha * running_loss + (1 - alpha) * loss.data[0]
-    viz.append_data(iter_idx, running_loss, 'Loss', 'running loss')
+   # viz.append_data(iter_idx, running_loss, 'Loss', 'running loss')
+    print(iter_idx,running_loss,'Loss','running_loss')
 
     # accuracy
     _, pred_idx = torch.max(pred, dim=1)
     correct = (batch['answer'] == pred_idx)
     train_acc = correct.cpu().data.numpy().mean()
-    viz.append_data(iter_idx, train_acc, 'Acc', 'acc')
+#    viz.append_data(iter_idx, train_acc, 'Acc', 'acc')
+    print('Acc,iter',train_acc,iter_idx)
 
     # learning rate
-    viz.append_data(iter_idx, optimizer.param_groups[0]['lr'], 'Learning rate', 'lr', ytype='log')
+#    viz.append_data(iter_idx, optimizer.param_groups[0]['lr'], 'Learning rate', 'lr', ytype='log')
 
     # accuracy by question type
-    for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
-        qtype_mask = (batch['qtype'] == qtype)
-        if qtype_mask.sum().data[0] != 0:
-            qtype_correct = correct[qtype_mask]
-            qtype_acc = qtype_correct.sum().data[0] / qtype_correct.size(0)
-            running_accs[qtype] = 0.20 * qtype_acc + \
-                                  (1 - 0.20) * running_accs[qtype]
-        viz.append_data(iter_idx, running_accs[qtype],
-                        'Train Question Type Acc', meta[0] + ' ' + str(meta[1]))
-
+#    for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
+        #qtype_mask = (batch['qtype'] == qtype)
+       # if qtype_mask.sum().data[0] != 0:
+      #      qtype_correct = correct[qtype_mask]
+     #       qtype_acc = qtype_correct.sum().data[0] / qtype_correct.size(0)
+     #       running_accs[qtype] = 0.20 * qtype_acc + \
+    #                              (1 - 0.20) * running_accs[qtype]
+#        viz.append_data(iter_idx, running_accs[qtype],
+ #                       'Train Question Type Acc', meta[0] + ' ' + str(meta[1]))
+    #print('type',running_accs[qtype])
     # print to command line
     end_t = timer()
     time_stamp = strftime('%a %d %b %y %X', gmtime())
@@ -83,40 +85,42 @@ def log_stuff(iter_idx, loss, batch, pred, val_dataloader, model,
         val_acc = val_correct.cpu().data.numpy().mean()
         val_accs.append(val_acc)
         # accuracy by question type
-        for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
-            qtype_mask = (val_batch['qtype'] == qtype)
-            if qtype_mask.sum().data[0] == 0:
-                continue
-            qtype_correct = val_correct[qtype_mask]
-            val_correct_by_qtype[qtype].append(qtype_correct)
+#        for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
+ #           qtype_mask = (val_batch['qtype'] == qtype)
+  #          if qtype_mask.sum().data[0] == 0:
+   #             continue
+    #        qtype_correct = val_correct[qtype_mask]
+     #       val_correct_by_qtype[qtype].append(qtype_correct)
 
     # plot stuff
-    viz.append_data(iter_idx, np.mean(val_losses), 'Loss', 'val loss')
-    viz.append_data(iter_idx, np.mean(val_accs), 'Acc', 'val acc')
+#    viz.append_data(iter_idx, np.mean(val_losses), 'Loss', 'val loss')
+ #   viz.append_data(iter_idx, np.mean(val_accs), 'Acc', 'val acc')
+    print('Loss',iter_idx,'Val',np.mean(val_losses),'Acc','Val_acc',np.mean(val_accs))
     acc_per_chart_type = defaultdict(lambda: [])
-    for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
-        correct = sum(c.sum().data[0] for c in val_correct_by_qtype[qtype])
-        total = sum(c.size(0) for c in val_correct_by_qtype[qtype])
-        qtype_acc = correct / total if total > 0 else 0.5
-        viz.append_data(iter_idx, qtype_acc, 'Val Question Type Acc',
-                        meta[0] + ' ' + str(meta[1]))
-        chart_type = meta[1]
-        acc_per_chart_type[chart_type].append(qtype_acc)
-    for chart_type in acc_per_chart_type:
-        acc = np.mean(acc_per_chart_type[chart_type])
-        viz.append_data(iter_idx, acc, 'Val Chart Type Acc', str(chart_type))
+    #for qtype, meta in enumerate(utils.QTYPE_ID_TO_META):
+     #   correct = sum(c.sum().data[0] for c in val_correct_by_qtype[qtype])
+      #  total = sum(c.size(0) for c in val_correct_by_qtype[qtype])
+       # qtype_acc = correct / total if total > 0 else 0.5
+#        viz.append_data(iter_idx, qtype_acc, 'Val Question Type Acc',
+ #                       meta[0] + ' ' + str(meta[1]))
+        #chart_type = meta[1]
+        #acc_per_chart_type[chart_type].append(qtype_acc)
+#    for chart_type in acc_per_chart_type:
+ #       acc = np.mean(acc_per_chart_type[chart_type])
+  #      viz.append_data(iter_idx, acc, 'Val Chart Type Acc', str(chart_type))
 
 def checkpoint_stuff(model, optimizer, epoch, args, model_args, iter_idx=0,
                      **kwargs):
-    os.makedirs(args.checkpoint_dir, exist_ok=True)
+    checkpoint_dir = 'shapes_smaller_100'
+    os.makedirs(checkpoint_dir, exist_ok=True)
     # model
-    model_path = pth.join(args.checkpoint_dir, 'model_ep{}.pt'.format(epoch))
+    model_path = pth.join(checkpoint_dir, 'model_ep{}.pt'.format(epoch))
     torch.save({
         'model_args': model_args,
         'state_dict': model.state_dict(),
     }, model_path)
     # optimizer
-    optim_path = pth.join(args.checkpoint_dir, 'optim_ep{}.pt'.format(epoch))
+    optim_path = pth.join(checkpoint_dir, 'optim_ep{}.pt'.format(epoch))
     torch.save({
         'optimizer': optimizer,
         'iter_idx': iter_idx,
@@ -125,21 +129,23 @@ def checkpoint_stuff(model, optimizer, epoch, args, model_args, iter_idx=0,
 
 def main(args):
     global running_loss, start_t
+    viz = None
     # logging info that needs to persist across iterations
-    viz = utils.visualize.VisdomVisualize(env_name=args.env_name)
-    viz.viz.text(str(args))
+   # viz = utils.visualize.VisdomVisualize(env_name=args.env_name)
+    #viz.viz.text(str(args))
+    print('args',str(args))
     running_loss = None
     running_accs = {qtype: 0.5 for qtype, _ in enumerate(utils.QTYPE_ID_TO_META)}
     start_t = None
 
     # data
     dataset = FigQADataset(args.figqa_dir, args.figqa_pre,
-                           split='train1')
+                           split='shapes_train')
     dataloader = DataLoader(dataset, batch_size=args.batch_size,
                             num_workers=args.workers, pin_memory=True,
                             shuffle=bool(args.shuffle_train))
     val_dataset = FigQADataset(args.figqa_dir, args.figqa_pre,
-                               split=args.val_split)
+                               split='shapes_val')
     val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size,
                                 num_workers=args.workers, pin_memory=True,
                                 shuffle=True)

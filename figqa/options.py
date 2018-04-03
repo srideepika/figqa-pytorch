@@ -12,13 +12,13 @@ def parse_arguments():
 
     #####################################################################
     # Training (train.py)
-    parser.add_argument('--batch-size', type=int, default=64,
+    parser.add_argument('--batch-size', type=int, default=128,
                         help='batch size')
     parser.add_argument('--shuffle-train', type=int, default=1,
                         help='1 to present the train set in random order')
-    parser.add_argument('--epochs', type=int, default=2000,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='epochs to train for')
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.00002,
                         help='learning rate')
     parser.add_argument('--lr-decay', type=float, default=1.0,
                         help='decay lr by this factor every epoch')
@@ -59,8 +59,8 @@ def parse_arguments():
     parser.add_argument('--workers', type=int, default=20,
                         help='number of worker threads for data loader')
     parser.add_argument('--val-split',
-                        help='split to evaluate', default='validation1',
-                        choices=['no_annot_test1', 'no_annot_test2', 'validation1',
+                        help='split to evaluate', default='shapes_val',
+                        choices=['shapes_val','shapes_test', 'no_annot_test2', 'validation1',
                                  'validation2', 'train1', 'sample_train1'])
 
     #####################################################################

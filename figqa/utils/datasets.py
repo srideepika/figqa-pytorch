@@ -15,6 +15,7 @@ from figqa.utils.sequences import NULL
 def batch_iter(dataloader, args, volatile=False):
     '''Generate appropriately transformed batches.'''
     for idx, batch in enumerate(dataloader):
+       # print('batchiter',idx,batch)
         for k in batch:
             if not torch.is_tensor(batch[k]):
                 continue
@@ -25,7 +26,8 @@ def batch_iter(dataloader, args, volatile=False):
         yield idx, batch
 
 def ques_to_tensor(ques, word2ind):
-    result = np.zeros(args.max_ques_len, dtype='uint32')
+   # result = np.zeros(args.max_ques_len, dtype='uint32')
+    result = np.zeros(40, dtype='uint32')
     for i, w in enumerate(ques):
         result[i] = word2ind[w]
     return result
@@ -56,10 +58,12 @@ class FigQADataset(Dataset):
         fname = pth.join(prepro_dname, split, 'qa_pairs.h5')
         self.qa_pairs = h5py.File(fname)
         with open(pth.join(dname, split, 'qa_pairs.json'), 'r') as f:
-            self.qa_pairs_json = json.load(f)['qa_pairs']
+            self.qa_pairs_json = json.load(f)
         self.questions = np.array(self.qa_pairs['questions']).astype('int')
         self.answers = np.array(self.qa_pairs['answers']).astype('int')
+        #print('asnwer type',self.answers[0])
         self.image_idx = np.array(self.qa_pairs['image_idx'])
+#        print('split,img',self.split,self.image_idx)
 
         # image->tensor transform
         self.transform = transforms.Compose([
@@ -101,11 +105,14 @@ class FigQADataset(Dataset):
         answer = self.answers[index]
         image_idx = self.image_idx[index]
         question_len = (question == NULL).nonzero()[0].min()
-        qtype = self.qa_pairs_json[index]['question_id']
+       # qtype = self.qa_pairs_json[index]['question_id']
+        qtype=self.split
 
         # load image
         fname = '{}.png'.format(image_idx)
-        path = pth.join(self.dname, self.split, 'png', fname)
+        fname = 'shapes_'+fname
+        path = pth.join(self.dname, self.split, 'png',self.split[7:], fname)
+       # print('path',path)
         img = Image.open(path).convert('RGB')
         img = self.transform(img)
 

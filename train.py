@@ -111,7 +111,7 @@ def log_stuff(iter_idx, loss, batch, pred, val_dataloader, model,
 
 def checkpoint_stuff(model, optimizer, epoch, args, model_args, iter_idx=0,
                      **kwargs):
-    checkpoint_dir = 'shapes_smaller_100'
+    checkpoint_dir = 'shapes_myques'
     os.makedirs(checkpoint_dir, exist_ok=True)
     # model
     model_path = pth.join(checkpoint_dir, 'model_ep{}.pt'.format(epoch))
@@ -149,17 +149,25 @@ def main(args):
     val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size,
                                 num_workers=args.workers, pin_memory=True,
                                 shuffle=True)
-
+    print('dataset loaded')
+#######
     # model
     if args.start_from:
         model = utils.load_model(fname=args.start_from, ngpus=args.cuda)
     else:
         model_args = figqa.options.model_args(args)
         model = utils.load_model(model_args, ngpus=args.cuda)
+    print('model loaded')
+#####
+    print('ATTRS',model)
 
     # optimization
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
                                  weight_decay=args.weight_decay)
+    rnnopt = torch.optim.Adam(model.parameters(), lr=args.lr,
+                                 weight_decay=args.weight_decay)
+    print('opt ATTR',optimizer)
+#####
     def exp_lr(epoch):
         iters = epoch * len(dataloader)
         return args.lr_decay**iters
@@ -168,26 +176,85 @@ def main(args):
 
     # training
     for epoch in range(args.epochs):
+        print('epoch',epoch)
         checkpoint_stuff(**locals())
         scheduler.step()
+        print('GRADCONV',model.module.cnn.convme.weight.grad)
+        print('scheduler step')
+######
         start_t = timer()
         # TODO: understand when/why automatic garbage collection slows down
         # the train loop
         gc.disable()
+        print('going to start for')
         for local_iter_idx, batch in batch_iter(dataloader, args):
+            print('started for')
             iter_idx = local_iter_idx + epoch * len(dataloader)
 
             # forward + update
+            ###############################
+
+######################
+          #  print('convme grad',model.convme.grad)
+ #           model.qlstm.grad = model.convme.weight.grad
+       #     print('grad shape',model.img_new.grad)
             optimizer.zero_grad()
+          #  model.module.lin.weight.grad = model.module.cnn.convme.weight.grad.view(9,1)
+            print('zero grad')
+            print('weights',model.module.cnn.convme.weight.grad)
             pred = model(batch)
-            loss = criterion(pred, batch['answer'])
-            loss.backward()
-            optimizer.step()
+            print('one over before back')
+            #loss = criterion(pred, batch['answer'])
+            #loss.backward()
+        #    model.module.lin.weight.grad = model.module.cnn.convme.weight.grad.view(9,1)
+            print('afte back')
+            #optimizer.step()
 
             # visualize, log, checkpoint
-            log_stuff(**locals())
+        #    log_stuff(**locals())
         gc.enable()
+def printgradnorm(self, grad_input, grad_output):
+    print('Inside ' + self.__class__.__name__ + 'backward')
+    print('Inside class:' + self.__class__.__name__)
+    print('')
+    print('INNPUT',grad_input)
+    print('OUTPUT',grad_output)
+  #  for i in range(len(grad_input)):
+   #     print('grad_input: ',i, type(grad_input[i]))
+    #    print('grad_input[0]: ',i, grad_input[i])
+     #   print('grad_output: ', i,type(grad_output[i]))
+      #  print('grad_output[0]: ',i, grad_output[i])
+       # if 1:
+        #   print('ip keys',grad_input)
+         #  print('op keys',grad_output)
 
+ #        print('')
+#        print('grad_input size:', grad_input[i].size())
+ #       print('grad_output size:', grad_output[i].size())
+  #      print('grad_input norm:', grad_input[i].data.norm())
+
+
+def printfgradnorm(self, grad_input, grad_output):
+    print('Inside ' + self.__class__.__name__ + 'forward')
+    print('Inside class:' + self.__class__.__name__)
+    print('')
+    print('INNPUT',grad_input)
+    print('OUTPUT',grad_output)
+ #   print('INNPUT',grad_input)
+# '''   for i in range(len(grad_input)):
+ #       print('grad_input: ',i, type(grad_input[i]))
+  #      print('grad_input[0]: ',i, (grad_input[i]))
+   #     print('grad_output: ',i, type(grad_output[i]))
+    #    print('grad_output[0]: ',i, (grad_output[i]))
+     #   if 1:
+      #     print('ip keys',grad_input)
+       #    print('op keys',grad_output)
+        #print('')
+   #     print('grad_input size:', grad_input[i].size())
+    #    print('grad_output size:', grad_output[i].size())
+     #   print('grad_input norm:', grad_input[i].data.norm())
+#'''
 
 if __name__ == '__main__':
     main(figqa.options.parse_arguments())
+
